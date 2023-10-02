@@ -1,4 +1,5 @@
-#!/usr/bin/env pybricks-micropython
+# !/usr/bin/env pybricks-micropython
+
 from pybricks.ev3devices import (ColorSensor, GyroSensor, InfraredSensor,
                                  Motor, TouchSensor, UltrasonicSensor)
 from pybricks.hubs import EV3Brick
@@ -16,9 +17,10 @@ ev3 = EV3Brick()
 
 
 # Write your program here.
-ev3.speaker.beep()
 
+motor1 = Motor(port=Port.B)
+motor2 = Motor(port=Port.C)
 
-class Robot:
-    def __init__(self):
-        logging.debug("Setting up...")
+engine = DriveBase(motor1, motor2, wheel_diameter=56, axle_track=114)
+
+engine.straight(1000)
