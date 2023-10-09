@@ -17,9 +17,9 @@ from pybricks.tools import DataLog, StopWatch, wait
 # Create your objects here.
 ev3 = EV3Brick()
 
-white = 50
-black = 10
-threshold = (white + black) / 2
+# white = 60
+# black = 0
+threshold = 15
 
 speed = -300
 turn_speed = -450
@@ -39,12 +39,24 @@ def is_black(sensor: ColorSensor) -> bool:
     return sensor.reflection() <= threshold
 
 
+black_timer = 0
+
+
 while True:
+    if black_timer > 1000:
+        motor_left.run(speed)
+        motor_right.run(turn_speed)
     if is_black(current_color):
         motor_right.run(speed)
         motor_left.run(-500)
-        wait(20)
+        black_timer = 0
     else:
         motor_left.run(speed)
         motor_right.run(turn_speed)
+        black_timer += 10
     wait(10)
+    ev3.screen.clear()
+    ev3.screen.draw_text(0, 0, "Timer: " + str(black_timer))
+    ev3.screen.draw_text(0, 20, "Is black?: " + str(is_black(current_color)))
+    ev3.screen.draw_text(0, 40, "Light value: " +
+                         str(current_color.reflection()))
