@@ -25,35 +25,15 @@ speed = -250
 
 
 # Write your program here.
-
-motor_left = Motor(port=Port.A)
-motor_right = Motor(port=Port.B)
-current_color = ColorSensor(port=Port.S2)
 destroyer = Motor(port=Port.D)
 press_sensor1 = TouchSensor(port=Port.S1)
 
-
-engine = DriveBase(motor_left, motor_right, wheel_diameter=56, axle_track=100)
-
-
-def is_black(sensor: ColorSensor) -> bool:
-    return sensor.reflection() <= threshold
-
+destroyer.run(1000)
+""" 
 
 destroyer_running = False
 
 while True:
-    if is_black(current_color):
-        engine.drive(speed, -80)
-        wait(250)
-    else:
-        engine.drive(speed, 80)
-    wait(10)
-    ev3.screen.clear()
-    ev3.screen.draw_text(0, 20, "Is black?: " + str(is_black(current_color)))
-    ev3.screen.draw_text(0, 40, "Light value: " +
-                         str(current_color.reflection()))
-
     if press_sensor1.pressed():
         destroyer_running = not destroyer_running
         wait(1000)
@@ -62,3 +42,4 @@ while True:
         destroyer.run(1000)
     else:
         destroyer.stop()
+ """
