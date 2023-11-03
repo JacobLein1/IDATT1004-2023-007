@@ -1,0 +1,17 @@
+[package]
+name = "noodle_pong_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build]
+target = "armv5te-unknown-linux-musleabi"
+
+[target.armv5te-unknown-linux-musleabi]
+linker = "rust-lld"
+
+[dependencies]
+ev3dev-lang-rust = { version = "0.13.0", default-features = false, features = [
+  "brickpi",
+] }
+serde_json = "1.0"

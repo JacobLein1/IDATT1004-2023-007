@@ -26,10 +26,8 @@ speed = -250
 
 # Write your program here.
 destroyer = Motor(port=Port.D)
+destroyer2 = Motor(port=Port.C)
 press_sensor1 = TouchSensor(port=Port.S1)
-
-destroyer.run(1000)
-""" 
 
 destroyer_running = False
 
@@ -39,7 +37,8 @@ while True:
         wait(1000)
 
     if destroyer_running:
-        destroyer.run(1000)
+        destroyer.run(-1000)
+        destroyer2.run(-1000)
     else:
         destroyer.stop()
- """
+        destroyer2.stop()
