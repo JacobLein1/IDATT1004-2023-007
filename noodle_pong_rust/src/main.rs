@@ -4,18 +4,18 @@ use ev3dev_lang_rust::motors::{LargeMotor, MotorPort};
 use ev3dev_lang_rust::sensors::{SensorPort, TouchSensor};
 use ev3dev_lang_rust::Ev3Result;
 use serde_json::*;
-use std::io::BufReader;
 use std::io;
 use std::io::prelude::*;
+use std::io::BufReader;
 use std::net::{TcpListener, TcpStream};
 
 mod constants;
 use constants::*;
 
 fn main() -> Ev3Result<()> {
-    let motor_right = LargeMotor::get(MotorPort::OutD)?;
-    let motor_left = LargeMotor::get(MotorPort::OutC)?;
-    let press_sensor = TouchSensor::get(SensorPort::In1)?;
+    // let motor_right = LargeMotor::get(MotorPort::OutD)?;
+    // let motor_left = LargeMotor::get(MotorPort::OutC)?;
+    // let press_sensor = TouchSensor::get(SensorPort::In1)?;
 
     let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT))?;
 
