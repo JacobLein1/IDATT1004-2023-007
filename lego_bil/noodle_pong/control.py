@@ -1,5 +1,4 @@
 #!/usr/bin/env pybricks-micropython
-__author__ = 'Artur Poznanski'
 
 import threading
 import time
@@ -26,12 +25,13 @@ def dc_clamp(value):
 
 
 ## Initializing ##
-print("Finding ps4 controller...")
+print("Finding server...")
 devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
-ps4dev = devices[0].fn
+for i in devices:
+    print(i)
 
-gamepad = evdev.InputDevice(ps4dev)
-
+# gamepad = evdev.InputDevice(ps4dev)
+"""
 forward_speed = 0
 side_speed = 0
 running = True
@@ -74,3 +74,4 @@ for event in gamepad.read_loop():  # this loops infinitely
         running = False
         time.sleep(0.5)  # Wait for the motor thread to finish
         break
+"""
