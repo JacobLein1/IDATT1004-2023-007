@@ -4,6 +4,7 @@ use ev3dev_lang_rust::motors::{LargeMotor, MotorPort};
 use ev3dev_lang_rust::sensors::{SensorPort, TouchSensor};
 use ev3dev_lang_rust::Ev3Result;
 use serde_json::*;
+use std::hash::BuildHasher;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -21,6 +22,9 @@ fn main() -> Ev3Result<()> {
 
     for stream in listener.incoming() {
         handle_connection(stream.unwrap()).unwrap();
+        ev3dev_lang_rust::sound::beep().unwrap();
+        println!("incoming")
+
     }
 
     Ok(())
@@ -28,9 +32,8 @@ fn main() -> Ev3Result<()> {
 
 fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
     let mut buffer = [0; 1024];
-    let request = stream.read(&mut buffer)?;
-    ev3dev_lang_rust::sound::beep().unwrap().wait().unwrap();
-    stream.write(OK.as_bytes())?;
+    stream.read(&mut buffer)?;
+    stream.write(&buffer[..])?;
     stream.flush()?;
     Ok(())
 }
