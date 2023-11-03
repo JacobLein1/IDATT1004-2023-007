@@ -20,9 +20,7 @@ fn main() -> Ev3Result<()> {
     let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT))?;
 
     for stream in listener.incoming() {
-        handle_connection(stream.unwrap());
-
-        println!("Connection established!");
+        handle_connection(stream.unwrap()).unwrap();
     }
 
     Ok(())
@@ -31,7 +29,7 @@ fn main() -> Ev3Result<()> {
 fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
     let mut buffer = [0; 1024];
     let request = stream.read(&mut buffer)?;
-    dbg!(request);
+    ev3dev_lang_rust::sound::beep().unwrap().wait().unwrap();
     stream.write(OK.as_bytes())?;
     stream.flush()?;
     Ok(())
