@@ -9,6 +9,7 @@ use std::io;
 use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 
+mod constants;
 use constants::*;
 
 fn main() -> Ev3Result<()> {
@@ -16,7 +17,7 @@ fn main() -> Ev3Result<()> {
     let motor_left = LargeMotor::get(MotorPort::OutC)?;
     let press_sensor = TouchSensor::get(SensorPort::In1)?;
 
-    let listener = TcpListener::bind(IP_ADDRESS + ":" + PORT)?;
+    let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT))?;
 
     for stream in listener.incoming() {
         handle_connection(stream.unwrap());
