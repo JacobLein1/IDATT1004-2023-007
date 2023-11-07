@@ -20,7 +20,8 @@ class _HomePageState extends State<HomePage> {
     final body = {"x": x, "force": force};
 
     try {
-      await http.post(adjustUrl, body: jsonEncode(body));
+      final response = await http.post(adjustUrl, body: jsonEncode(body));
+      print(response.statusCode);
     } catch (e) {
       print(e);
     }
@@ -29,7 +30,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> onFire() async {
     print("Sending fire request...");
     try {
-      await http.post(fireUrl);
+      final response = await http.post(fireUrl);
+      print(response.statusCode);
     } catch (e) {
       print(e);
     }

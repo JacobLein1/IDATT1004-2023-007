@@ -12,6 +12,6 @@ final fireUrl = Uri(
   path: "fire",
 );
 
-const baseUrl = "192.168.0.0";
+const baseUrl = "192.168.2.2";
 const int port = 7878;
 const scheme = "http";

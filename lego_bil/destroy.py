@@ -25,8 +25,8 @@ speed = -250
 
 
 # Write your program here.
-destroyer = Motor(port=Port.D)
-destroyer2 = Motor(port=Port.C)
+destroyer = Motor(port=Port.A)
+destroyer2 = Motor(port=Port.B)
 press_sensor1 = TouchSensor(port=Port.S1)
 
 destroyer_running = False
