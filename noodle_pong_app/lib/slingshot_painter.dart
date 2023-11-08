@@ -121,7 +121,7 @@ class SlingshotPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     Offset finger;
-    if (stringPointPosition != null || ballPosition! != null) {
+    if (stringPointPosition != null || ballPosition != null) {
       finger = stringPointPosition!;
     } else {
       finger = center;

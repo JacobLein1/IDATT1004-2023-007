@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:noodle_pong_app/noodle_pong_app.dart';
 import 'package:noodle_pong_app/settings_page.dart';
 import 'package:noodle_pong_app/slingshot.dart';
 
@@ -22,7 +23,8 @@ class _SlingshotPageState extends State<SlingshotPage> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => SettingsPage(),
+                  builder: (context) =>
+                      SettingsPage(app: NoodlePongApp.of(context)),
                 ),
               );
             },

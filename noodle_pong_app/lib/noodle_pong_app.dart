@@ -44,6 +44,64 @@ class NoodlePongAppState extends State<NoodlePongApp> {
     });
   }
 
+  bool get isRainbowColorOn => _isRainbowColorOn;
+
+  bool _isRainbowColorOn = false;
+  bool _hasAccptedEpilepsyWarning = false;
+
+  Future<void> startRainbowColors(BuildContext context) async {
+    if (!_hasAccptedEpilepsyWarning) {
+      final result = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Epilepsy Warning"),
+          content: const Text(
+              "This feature uses flashing colors. If you have epilepsy, please refrain from using this feature."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _hasAccptedEpilepsyWarning = true;
+                  Navigator.of(context).pop(true);
+                });
+              },
+              child: const Text("Proceed"),
+            )
+          ],
+        ),
+      );
+      if (!(result ?? false)) {
+        return;
+      }
+    }
+    setState(() {
+      _isRainbowColorOn = true;
+    });
+    final rainbowColors = [
+      Colors.red,
+      Colors.orange,
+      Colors.yellow,
+      Colors.green,
+      Colors.blue,
+      Colors.purple,
+    ];
+    int index = 0;
+    Future.doWhile(() async {
+      await Future.delayed(Duration(milliseconds: 300));
+      setState(() {
+        setColorSeed(rainbowColors[index]);
+      });
+      index = (index + 1) % rainbowColors.length;
+      return _isRainbowColorOn;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -55,7 +113,9 @@ class NoodlePongAppState extends State<NoodlePongApp> {
         ),
         brightness: _brightness,
         colorScheme: ColorScheme.fromSeed(
-            seedColor: _colorSeed, brightness: _brightness),
+          seedColor: _colorSeed,
+          brightness: _brightness,
+        ),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,

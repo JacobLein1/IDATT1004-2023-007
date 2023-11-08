@@ -5,7 +5,9 @@ import 'package:noodle_pong_app/constants.dart';
 enum FormStateVariant { saved, error, idle }
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, required this.app});
+
+  final NoodlePongAppState app;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -17,7 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _portController = TextEditingController(text: "");
   FormStateVariant _formStateVariant = FormStateVariant.idle;
 
-  NoodlePongAppState get app => NoodlePongApp.of(context);
+  NoodlePongAppState get app => widget.app;
 
   @override
   void initState() {
@@ -61,9 +63,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final app = NoodlePongApp.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text("Settings")),
+      appBar: AppBar(
+        title: const Text("Settings"),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -187,7 +191,16 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(
                 height: 24,
               ),
-              _buildColorSelectionWidget()
+              _buildColorSelectionWidget(context),
+              SizedBox(
+                height: 24,
+              ),
+              OutlinedButton(
+                onPressed: () {
+                  app.startRainbowColors(context);
+                },
+                child: const Text("Start rainbow mode"),
+              ),
             ],
           ),
         ),
@@ -224,6 +237,8 @@ class _SettingsPageState extends State<SettingsPage> {
     "Orange": Colors.orange,
   };
 
+  bool isRainbowColorOn = false;
+
   String _selectedColor = "Green";
 
   void handleColorSelection(String color) {
@@ -232,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  Widget _buildColorSelectionWidget() {
+  Widget _buildColorSelectionWidget(BuildContext context) {
     return Wrap(
       spacing: 8,
       children: _colorMap.keys.map<Widget>(
@@ -255,12 +270,13 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(color: textColor),
             ),
             selected: isSelected,
-            backgroundColor: color,
+            backgroundColor:
+                app.isRainbowColorOn ? Theme.of(context).primaryColor : color,
             selectedColor: selectedColor,
             onSelected: (value) {
               setState(() {
                 _selectedColor = name;
-                NoodlePongApp.of(context).setColorSeed(color);
+                app.setColorSeed(color);
               });
             },
           );
