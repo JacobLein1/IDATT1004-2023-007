@@ -1,8 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:noodle_pong_app/noodle_pong_app.dart';
 import 'package:noodle_pong_app/slingshot_painter.dart';
+import 'package:http/http.dart' as http;
+
+import 'constants.dart';
 
 class SlingShot extends StatefulWidget {
-  const SlingShot({super.key});
+  const SlingShot({
+    super.key,
+  });
 
   @override
   State<SlingShot> createState() => _SlingShotState();
@@ -31,33 +40,40 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
     super.initState();
   }
 
-  void handlePointerMove(PointerMoveEvent event) {
+  NoodlePongAppState getApp(BuildContext context) => NoodlePongApp.of(context);
+
+  void handlePointerMove(PointerEvent event, BuildContext context) {
     setState(() {
       _isAnimating = false;
       pointerPosition = event.localPosition;
       ballPosition = event.localPosition.translate(0, -30);
+      finishedAdjusting = false;
     });
+    handleUpdate(
+        event.localPosition.dx, -event.localPosition.dy, getApp(context));
   }
 
-  void handlePointerUp(PointerUpEvent event) {
+  void handlePointerUp(PointerEvent event, BuildContext context) {
     setState(() {
       _isAnimating = true;
     });
-    animateReset(event);
-    setState(() {
-      pointerPosition = null;
-      ballPosition = null;
-    });
+    animateReset(event).then(
+      (value) => setState(() {
+        pointerPosition = null;
+        ballPosition = null;
+      }),
+    );
+    handleFire(getApp(context));
   }
 
-  void animateReset(PointerUpEvent event) {
+  Future<void> animateReset(PointerEvent event) async {
     RenderBox? renderbox =
         widgetKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderbox == null) {
       return;
     }
     double width = renderbox.size.width / 2;
-    double height = renderbox.size.height / 2;
+    double height = renderbox.size.height / 2 * 0.8;
 
     Offset center = Offset(width, height);
 
@@ -68,6 +84,10 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
         curve: Curves.elasticOut,
       ),
     );
+
+    if (ballPosition == null) {
+      return;
+    }
 
     // Pingpong ball
     Offset ballPositionEnd =
@@ -82,24 +102,111 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
       ),
     );
 
-    _stringController.forward(from: 0);
-    _ballController.forward(from: 0);
+    List<Future> futures = [];
+    futures.add(_stringController.forward(from: 0));
+    futures.add(_ballController.forward(from: 0));
+
+    await futures.wait;
   }
 
   @override
   Widget build(BuildContext context) {
     return Listener(
       key: widgetKey,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
+      onPointerMove: (event) => handlePointerMove(event, context),
+      onPointerUp: (event) => handlePointerUp(event, context),
+      onPointerDown: (event) => handlePointerMove(event, context),
       child: CustomPaint(
         size: const Size(double.infinity, double.infinity),
         painter: SlingshotPainter(
-          _isAnimating,
-          _isAnimating ? _pointerPositionAnimation.value : pointerPosition,
-          _isAnimating ? _ballPositionAnimation.value : ballPosition,
-        ),
+            isAnimating: _isAnimating,
+            stringPointPosition: _isAnimating
+                ? _pointerPositionAnimation.value
+                : pointerPosition,
+            ballPosition:
+                _isAnimating ? _ballPositionAnimation.value : ballPosition,
+            primaryColor: finishedAdjusting
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+            secondaryColor: Theme.of(context).colorScheme.secondary,
+            stringColor: Theme.of(context).colorScheme.onBackground,
+            animationValue: _ballController.value,
+            finishedAdjusting: finishedAdjusting),
       ),
     );
+  }
+
+  double x = 0, force = 0, newX = 0, newForce = 0;
+  bool finishedAdjusting = false;
+
+  Future<void> adjustEv3(NoodlePongAppState app) async {
+    setState(() {
+      finishedAdjusting = true;
+    });
+    print("Sending adjust request... x: $x, force: $force");
+    final body = {"x": x, "force": force};
+
+    try {
+      final response =
+          await http.post(getAdjustUrl(app), body: jsonEncode(body));
+      print(response.statusCode);
+    } catch (e) {
+      final SnackBar snackBar =
+          SnackBar(content: Text("Failed to contact EV3"));
+      snackbarKey.currentState?.showSnackBar(snackBar);
+      print(e);
+    }
+  }
+
+  Future<void> fireEv3(NoodlePongAppState app) async {
+    setState(() {
+      finishedAdjusting = false;
+    });
+    print("Sending fire request...");
+    try {
+      final response = await http.post(
+        getFireUrl(app),
+      );
+      print(response.statusCode);
+    } catch (e) {
+      final SnackBar snackBar =
+          SnackBar(content: Text("Failed to contact EV3"));
+      snackbarKey.currentState?.showSnackBar(snackBar);
+      print(e);
+    }
+  }
+
+  void handleFire(NoodlePongAppState app) async {
+    _debounce?.cancel();
+    fireEv3(app);
+  }
+
+  void handleUpdate(double x, double force, NoodlePongAppState app) {
+    setState(() {
+      this.newX = x;
+      this.newForce = force;
+    });
+    _handleDebounce();
+  }
+
+  Timer? _debounce;
+
+  _handleDebounce() {
+    if (_debounce?.isActive ??
+        false || (newForce == force && newX == x) && !finishedAdjusting) {
+      _debounce!.cancel();
+    }
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (newForce == force && newX == x) return;
+      adjustEv3(NoodlePongApp.of(context));
+      newForce = force;
+      newX = x;
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 }
