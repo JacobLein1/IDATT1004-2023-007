@@ -35,9 +35,9 @@ class SlingshotPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final stringCenter = Offset(size.width / 2, size.height / 2 * 0.8);
 
+    late final double rotation;
     late final double yTranslation;
     if (ballPosition != null) {
-      late final double rotation;
       if (stringPointPosition != null) {
         rotation = ((stringCenter.dx - stringPointPosition!.dx) / size.width) *
             pi /
@@ -111,6 +111,57 @@ class SlingshotPainter extends CustomPainter {
       canvas.drawCircle(ballPosition!, ballRadius, ballPaint);
       canvas.drawCircle(ballPosition!, ballRadius, ballStrokePaint);
     }
+
+    // Table in background
+    final tablePaint = Paint()
+      ..color = Colors.brown
+      ..strokeWidth = 20
+      ..style = PaintingStyle.stroke;
+
+    final tablePath = Path()
+      ..moveTo(ballRadius, size.height * 0.3)
+      ..lineTo(ballRadius, size.height * 0.2)
+      ..lineTo(size.width - ballRadius, size.height * 0.2)
+      ..lineTo(size.width - ballRadius, size.height * 0.3)
+      ..lineTo(size.width - ballRadius * 1.5, size.height * 0.2)
+      ..lineTo(ballRadius * 1.5, size.height * 0.2)
+      ..lineTo(ballRadius, size.height * 0.3);
+
+    final cupPaint = Paint()
+      ..color = primaryColor
+      ..strokeWidth = 5
+      ..style = PaintingStyle.stroke;
+
+    final cupFillPaint = Paint()
+      ..color = primaryColor
+      ..style = PaintingStyle.fill;
+
+    final cupPath = Path()
+      ..addOval(
+        Rect.fromCenter(
+            center: Offset(size.width / 2, size.height * 0.15),
+            width: 30,
+            height: 10),
+      )
+      ..moveTo(size.width / 2 + 15, size.height * 0.15)
+      ..lineTo(size.width / 2 + 10, size.height * 0.19)
+      ..moveTo(size.width / 2 - 15, size.height * 0.15)
+      ..lineTo(size.width / 2 - 10, size.height * 0.19);
+
+    final cupFillPath = Path()
+      ..addOval(
+        Rect.fromCenter(
+            center: Offset(size.width / 2, size.height * 0.19),
+            width: 20,
+            height: 10),
+      );
+
+    canvas.rotate(-rotation);
+    canvas.translate(0, -yTranslation);
+
+    canvas.drawPath(tablePath, tablePaint);
+    canvas.drawPath(cupPath, cupPaint);
+    canvas.drawPath(cupFillPath, cupFillPaint);
   }
 
   void _drawString(
