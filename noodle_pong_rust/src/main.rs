@@ -10,6 +10,7 @@ use ev3dev_lang_rust::{Ev3Result, wait};
 use ev3dev_lang_rust::motors::{LargeMotor, MotorPort};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use serde_json::ser::State::Rest;
 
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::*;
@@ -43,8 +44,6 @@ async fn main() -> Ev3Result<()> {
             let (req, res) = parse_request(&mut stream).await;
             requests.lock().unwrap().push(req);
             stream.write_all(res.as_bytes()).await.unwrap();
-
-            if re
         });
     }
 }
@@ -64,10 +63,11 @@ async fn parse_request(stream: &mut TcpStream) -> (Request, &'static str) {
         (Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()), OK)
     } else if buffer.starts_with(b"POST /fire") {
         (Request::Fire, OK)
+    } else if buffer.starts_with(b"POST /calibrate") {
+        (Request::Calibrate, OK)
     } else {
-        (Request::None, NOT_FOUND)
+        (Request::None, OK)
     };
-
     (req, res)
 }
 
@@ -85,5 +85,6 @@ struct Adjustment {
 enum Request {
     Adjust(Adjustment),
     Fire,
+    Calibrate,
     None
 }
