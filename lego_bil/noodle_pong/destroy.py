@@ -25,20 +25,29 @@ speed = -250
 
 
 # Write your program here.
-destroyer = Motor(port=Port.D)
-destroyer2 = Motor(port=Port.C)
+destroyer = Motor(port=Port.A)
+destroyer2 = Motor(port=Port.B)
+launcher = Motor(port=Port.C)
+rotator = Motor(port=Port.D)
 press_sensor1 = TouchSensor(port=Port.S1)
 
-destroyer_running = False
 
-while True:
-    if press_sensor1.pressed():
-        destroyer_running = not destroyer_running
-        wait(1000)
+#rotator.run_angle(175, 60)
+rot_angle = 0
+rotator.run_angle(175, -rot_angle)
 
-    if destroyer_running:
-        destroyer.run(-1000)
-        destroyer2.run(-1000)
-    else:
-        destroyer.stop()
-        destroyer2.stop()
+power = -200
+ratio = 0.5
+
+destroyer.run(power * ratio)
+destroyer2.run(power)
+
+launch_angle = 1200
+spd = 175
+launcher.run_angle(spd, launch_angle)
+destroyer.stop()
+destroyer2.stop()
+launcher.run_angle(spd, -launch_angle)
+
+rotator.run_angle(175, rot_angle)
+

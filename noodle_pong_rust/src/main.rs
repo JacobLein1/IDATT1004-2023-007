@@ -1,41 +1,89 @@
-extern crate ev3dev_lang_rust;
-
-use ev3dev_lang_rust::motors::{LargeMotor, MotorPort};
-use ev3dev_lang_rust::sensors::{SensorPort, TouchSensor};
-use ev3dev_lang_rust::Ev3Result;
-use serde_json::*;
-use std::hash::BuildHasher;
-use std::io;
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicUsize;
+use std::{io, thread};
 use std::io::prelude::*;
-use std::io::BufReader;
-use std::net::{TcpListener, TcpStream};
+use std::thread::sleep;
+use std::time::Duration;
+
+use ev3dev_lang_rust::{Ev3Result, wait};
+use ev3dev_lang_rust::motors::{LargeMotor, MotorPort};
+use serde::{Deserialize, Serialize};
+use serde_json;
+
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::*;
+use tokio::runtime::Handle;
 
 mod constants;
 use constants::*;
 
-fn main() -> Ev3Result<()> {
-    // let motor_right = LargeMotor::get(MotorPort::OutD)?;
-    // let motor_left = LargeMotor::get(MotorPort::OutC)?;
-    // let press_sensor = TouchSensor::get(SensorPort::In1)?;
+#[tokio::main]
+async fn main() -> Ev3Result<()> {
+    let motor_right = Arc::new(LargeMotor::get(MotorPort::OutA)?);
+    let motor_left = Arc::new(LargeMotor::get(MotorPort::OutB)?);
+    motor_left.set_stop_action("brake")?;
+    motor_left.set_stop_action("brake")?;
 
-    let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT))?;
+    let requests = Arc::new(Mutex::new(Vec::new()));
 
-    for stream in listener.incoming() {
-        handle_connection(stream.unwrap()).unwrap();
+    motor_left.run_direct()?;
+    motor_left.set_duty_cycle_sp(100)?;
+    sleep(Duration::from_secs(10));
+    motor_left.stop()?;
+
+    let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT)).await?;
+
+    loop {
+        let (mut stream, _) = listener.accept().await.unwrap();
         ev3dev_lang_rust::sound::beep().unwrap();
-        println!("incoming")
 
+        let requests = requests.clone();
+        tokio::spawn( async move {
+            let (req, res) = parse_request(&mut stream).await;
+            requests.lock().unwrap().push(req);
+            stream.write_all(res.as_bytes()).await.unwrap();
+
+            if re
+        });
     }
-
-    Ok(())
 }
 
-fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
+async fn parse_request(stream: &mut TcpStream) -> (Request, &'static str) {
     let mut buffer = [0; 1024];
-    stream.read(&mut buffer)?;
-    stream.write(&buffer[..])?;
-    stream.flush()?;
-    Ok(())
+    stream.read(&mut buffer).await.unwrap();
+
+    let body = buffer
+        .split(|e| *e == b'\n')
+        .last().unwrap()
+        .into_iter()
+        .filter_map(|b| if *b == 0 {None} else {Some(*b)})
+        .collect::<Vec<_>>();
+
+    let (req, res) = if buffer.starts_with(b"POST /adjust") {
+        (Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()), OK)
+    } else if buffer.starts_with(b"POST /fire") {
+        (Request::Fire, OK)
+    } else {
+        (Request::None, NOT_FOUND)
+    };
+
+    (req, res)
 }
 
 const OK: &str = "HTTP/1.1 200 OK\r\n\r\n";
+const NOT_FOUND: &str = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
+const BAD_REQUEST: &str = "HTTP/1.1 400 BAD REQUEST\r\n\r\n";
+
+
+#[derive(Serialize, Deserialize)]
+struct Adjustment {
+    x: f64,
+    force: f64
+}
+
+enum Request {
+    Adjust(Adjustment),
+    Fire,
+    None
+}
