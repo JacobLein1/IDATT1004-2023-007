@@ -33,18 +33,44 @@ class SlingshotPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final double forceEndHeight = size.height * 0.8;
+    final double forceStartHeight = size.height * 0.35;
+    final double rotationStart = ballRadius;
+    final double rotationEnd = size.width - ballRadius;
+
+    final double? positionY =
+        stringPointPosition?.dy.clamp(forceStartHeight, forceEndHeight);
+    final double? positionX =
+        stringPointPosition?.dx.clamp(rotationStart, rotationEnd);
+
+    final Offset? stringPositionClamped =
+        stringPointPosition != null ? Offset(positionX!, positionY!) : null;
+
+    final Offset? ballPositionClamped = !isAnimating
+        ? (ballPosition != null
+            ? Offset(
+                    ballPosition!.dx
+                        .clamp(rotationStart, rotationEnd)
+                        .clamp(rotationStart, rotationEnd),
+                    ballPosition!.dy
+                        .clamp(forceStartHeight, forceEndHeight)
+                        .clamp(forceStartHeight, forceEndHeight))
+                .translate(0, -30)
+            : null)
+        : ballPosition;
+
     final stringCenter = Offset(size.width / 2, size.height / 2 * 0.8);
 
     late final double rotation;
     late final double yTranslation;
-    if (ballPosition != null) {
-      if (stringPointPosition != null) {
-        rotation = ((stringCenter.dx - stringPointPosition!.dx) / size.width) *
+    if (ballPositionClamped != null) {
+      if (stringPositionClamped != null) {
+        rotation = ((stringCenter.dx - stringPositionClamped.dx) / size.width) *
             pi /
             -20;
-        yTranslation = (stringPointPosition!.dy - stringCenter.dy) * -0.1;
+        yTranslation = (stringPositionClamped.dy - stringCenter.dy) * -0.1;
       } else {
-        rotation = ((ballPosition!.dx / size.width) - 0.5) * pi / -20;
+        rotation = ((ballPositionClamped.dx / size.width) - 0.5) * pi / -20;
       }
       canvas.rotate(rotation);
       canvas.translate(0, yTranslation);
@@ -94,7 +120,7 @@ class SlingshotPainter extends CustomPainter {
 
     final pointPaint = Paint()..color = primaryColor;
 
-    _drawString(canvas, size, left, right, stringCenter);
+    _drawString(canvas, size, left, right, stringCenter, stringPositionClamped);
 
     final double pointSize =
         finishedAdjusting ? expandedPointRadius : pointRadius;
@@ -107,9 +133,9 @@ class SlingshotPainter extends CustomPainter {
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    if (ballPosition != null) {
-      canvas.drawCircle(ballPosition!, ballRadius, ballPaint);
-      canvas.drawCircle(ballPosition!, ballRadius, ballStrokePaint);
+    if (ballPositionClamped != null) {
+      canvas.drawCircle(ballPositionClamped, ballRadius, ballPaint);
+      canvas.drawCircle(ballPositionClamped, ballRadius, ballStrokePaint);
     }
 
     // Table in background
@@ -164,16 +190,16 @@ class SlingshotPainter extends CustomPainter {
     canvas.drawPath(cupFillPath, cupFillPaint);
   }
 
-  void _drawString(
-      Canvas canvas, Size size, Offset left, Offset right, Offset center) {
+  void _drawString(Canvas canvas, Size size, Offset left, Offset right,
+      Offset center, Offset? stringPositionClamped) {
     final stringPaint = Paint()
       ..color = stringColor
       ..strokeWidth = stringStrokeWidth
       ..strokeCap = StrokeCap.round;
 
     Offset finger;
-    if (stringPointPosition != null || ballPosition != null) {
-      finger = stringPointPosition!;
+    if (stringPositionClamped != null || ballPosition != null) {
+      finger = stringPositionClamped!;
     } else {
       finger = center;
     }

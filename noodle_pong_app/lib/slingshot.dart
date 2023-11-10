@@ -24,6 +24,7 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
   final widgetKey = GlobalKey();
   bool _isAnimating = false;
   Offset? ballPosition;
+  static const double ballRadius = 25;
 
   late Animation<Offset> _pointerPositionAnimation;
   late Animation<Offset> _ballPositionAnimation;
@@ -43,14 +44,27 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
   NoodlePongAppState getApp(BuildContext context) => NoodlePongApp.of(context);
 
   void handlePointerMove(PointerEvent event, BuildContext context) {
+    RenderBox? renderbox =
+        widgetKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderbox == null) {
+      return;
+    }
     setState(() {
       _isAnimating = false;
       pointerPosition = event.localPosition;
-      ballPosition = event.localPosition.translate(0, -30);
+      ballPosition = event.localPosition;
       finishedAdjusting = false;
     });
-    handleUpdate(
-        event.localPosition.dx, -event.localPosition.dy, getApp(context));
+    final positionX = event.localPosition.dx
+        .clamp(ballRadius, renderbox.size.width - ballRadius);
+    final positionY = event.localPosition.dy
+        .clamp(renderbox.size.height * 0.35, renderbox.size.height * 0.8);
+
+    final rotationX =
+        lerp(ballRadius, renderbox.size.width - ballRadius, -1, 1, positionX);
+    final forceY = lerp(renderbox.size.height * 0.35,
+        renderbox.size.height * 0.8, 0, 1, positionY);
+    handleUpdate(rotationX, forceY, getApp(context));
   }
 
   void handlePointerUp(PointerEvent event, BuildContext context) {
@@ -143,8 +157,8 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
     setState(() {
       finishedAdjusting = true;
     });
-    print("Sending adjust request... x: $x, force: $force");
-    final body = {"x": x, "force": force};
+    print("Sending adjust request... x: $newX, force: $newForce");
+    final body = {"x": newX, "force": newForce};
 
     try {
       final response =
@@ -209,4 +223,10 @@ class _SlingShotState extends State<SlingShot> with TickerProviderStateMixin {
     _debounce?.cancel();
     super.dispose();
   }
+}
+
+double lerp(double minTotal, double maxTotal, double minResult,
+    double maxResult, double value) {
+  return (value - minTotal) / (maxTotal - minTotal) * (maxResult - minResult) +
+      minResult;
 }
