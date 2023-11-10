@@ -33,14 +33,14 @@ press_sensor1 = TouchSensor(port=Port.S1)
 
 
 #rotator.run_angle(175, 60)
-rot_angle = 0
+rot_angle = 45
 rotator.run_angle(175, -rot_angle)
 
-power = -200
-ratio = 0.5
+power = -750
+ratio = 1.0
 
-destroyer.run(power * ratio)
-destroyer2.run(power)
+destroyer.run(power)
+destroyer2.run(power * ratio)
 
 launch_angle = 1200
 spd = 175
