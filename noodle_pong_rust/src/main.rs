@@ -110,3 +110,11 @@ enum Request {
     Calibrate,
     None
 }
+
+fn dir_map(x: f64) -> i32 {
+    (x * 45.00) as i32
+}
+
+fn force_map(force: f64) -> i32 {
+    (force * 100.00) as i32
+}
