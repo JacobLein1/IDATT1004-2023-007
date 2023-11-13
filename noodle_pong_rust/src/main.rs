@@ -30,8 +30,6 @@ async fn main() -> Ev3Result<()> {
     rotator.set_stop_action("brake")?;
     feeder.set_stop_action("brake")?;
 
-    let requests = Arc::new(Mutex::new(Vec::new()));
-
     motor_left.set_duty_cycle_sp(100)?;
     motor_left.run_direct()?;
     sleep(Duration::from_secs(10));
@@ -42,19 +40,13 @@ async fn main() -> Ev3Result<()> {
     loop {
         let (mut stream, _) = listener.accept().await.unwrap();
         ev3dev_lang_rust::sound::beep().unwrap();
-
-        let req2 = requests.clone();
-
-        let requests = requests.clone();
-        tokio::spawn(async move {
-            let (req, res) = parse_request(&mut stream).await;
-            requests.lock().unwrap().push(req);
-            stream.write_all(res.as_bytes()).await.unwrap();
-        });
         
-        let mut req_lock = req2.lock().unwrap();
-        let last = req_lock.pop();
-        if let Some(Request::Adjust(adjustment)) = last {
+        let (req, res) = parse_request(&mut stream).await;
+
+        stream.write(res.as_bytes()).await.unwrap();
+        stream.flush().await.unwrap();
+        
+        if let Request::Adjust(adjustment) = req {
             let Adjustment { x, force } = adjustment;
             let x = dir_map(x);
             let force = force_map(force);
@@ -62,7 +54,7 @@ async fn main() -> Ev3Result<()> {
             motor_right.set_duty_cycle_sp(force)?;
 
             rotator.set_position_sp(x)?;
-            rotator.wait_until_not_moving(Some(TIMEOUT));
+            // rotator.wait_until_not_moving(Some(TIMEOUT));
         }
 
     }
