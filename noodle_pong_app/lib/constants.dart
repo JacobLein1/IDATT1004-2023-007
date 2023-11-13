@@ -15,6 +15,20 @@ Uri getFireUrl(NoodlePongAppState app) => Uri(
       path: "fire",
     );
 
+Uri getTestUrl(NoodlePongAppState app) => Uri(
+      scheme: scheme,
+      host: app.ipAddress,
+      port: app.port,
+      path: "test",
+    );
+
+Uri getCalibrateUrl(NoodlePongAppState app) => Uri(
+      scheme: scheme,
+      host: app.ipAddress,
+      port: app.port,
+      path: "calibrate",
+    );
+
 const DEFAULT_IP_ADDRESS = "192.168.2.2";
 const int DEFAULT_PORT = 7878;
 const scheme = "http";

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:noodle_pong_app/noodle_pong_app.dart';
 import 'package:noodle_pong_app/constants.dart';
+import 'package:http/http.dart' as http;
 
 enum FormStateVariant { saved, error, idle }
 
@@ -160,6 +161,54 @@ class _SettingsPageState extends State<SettingsPage> {
                   TextButton(
                     onPressed: () => _handleResetForm(context),
                     child: Text("Reset form"),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 24,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  OutlinedButton(
+                    onPressed: () async {
+                      try {
+                        final result = await http.post(getTestUrl(app));
+
+                        if (result.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text("Connection successful!"),
+                            backgroundColor: Colors.green,
+                          ));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text("Error connecting to ev3!"),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    },
+                    child: const Text("Test connection"),
+                  ),
+                  OutlinedButton(
+                    onPressed: () async {
+                      try {
+                        final result = await http.post(getCalibrateUrl(app));
+
+                        if (result.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text("Connection successful!"),
+                            backgroundColor: Colors.green,
+                          ));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text("Error connecting to ev3!"),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    },
+                    child: const Text("Calibrate"),
                   ),
                 ],
               ),
