@@ -1,13 +1,14 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::thread::sleep;
 use std::time::Duration;
 
+use ev3dev_lang_rust::motors::{LargeMotor, MediumMotor, MotorPort};
 use ev3dev_lang_rust::Ev3Result;
-use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use tokio::net::{TcpListener, TcpStream};
 use tokio::io::*;
+use tokio::net::{TcpListener, TcpStream};
 
 mod constants;
 use constants::*;
@@ -28,13 +29,19 @@ async fn main() -> Ev3Result<()> {
     loop {
         let (mut stream, _) = listener.accept().await.unwrap();
         ev3dev_lang_rust::sound::beep().unwrap();
-        
-        let (req, res) = parse_request(&mut stream).await;
 
-        stream.write(res.as_bytes()).await.unwrap();
-        stream.flush().await.unwrap();
-        
-        if let Request::Adjust(adjustment) = req {
+        let req2 = requests.clone();
+
+        let requests = requests.clone();
+        tokio::spawn(async move {
+            let (req, res) = parse_request(&mut stream).await;
+            requests.lock().unwrap().push(req);
+            stream.write_all(res.as_bytes()).await.unwrap();
+        });
+
+        let mut req_lock = req2.lock().unwrap();
+        let last = req_lock.pop();
+        if let Some(Request::Adjust(adjustment)) = last {
             let Adjustment { x, force } = adjustment;
             let x = dir_map(x);
             let force = force_map(force);
@@ -44,7 +51,6 @@ async fn main() -> Ev3Result<()> {
             rotator.set_position_sp(x)?;
             // rotator.wait_until_not_moving(Some(TIMEOUT));
         }
-
     }
 }
 
@@ -54,13 +60,17 @@ async fn parse_request(stream: &mut TcpStream) -> (Request, &'static str) {
 
     let body = buffer
         .split(|e| *e == b'\n')
-        .last().unwrap()
+        .last()
+        .unwrap()
         .into_iter()
-        .filter_map(|b| if *b == 0 {None} else {Some(*b)})
+        .filter_map(|b| if *b == 0 { None } else { Some(*b) })
         .collect::<Vec<_>>();
 
     let (req, res) = if buffer.starts_with(b"POST /adjust") {
-        (Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()), OK)
+        (
+            Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()),
+            OK,
+        )
     } else if buffer.starts_with(b"POST /fire") {
         (Request::Fire, OK)
     } else if buffer.starts_with(b"POST /calibrate") {
@@ -77,18 +87,17 @@ const BAD_REQUEST: &str = "HTTP/1.1 400 BAD REQUEST\r\n\r\n";
 
 const TIMEOUT: Duration = Duration::from_secs(3);
 
-
 #[derive(Serialize, Deserialize)]
 struct Adjustment {
     x: f64,
-    force: f64
+    force: f64,
 }
 
 enum Request {
     Adjust(Adjustment),
     Fire,
     Calibrate,
-    None
+    None,
 }
 
 fn dir_map(x: f64) -> i32 {
