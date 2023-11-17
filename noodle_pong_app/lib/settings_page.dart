@@ -186,6 +186,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           content: const Text("Error connecting to ev3!"),
                           backgroundColor: Colors.red,
                         ));
+                        print(e);
                       }
                     },
                     child: const Text("Test connection"),
