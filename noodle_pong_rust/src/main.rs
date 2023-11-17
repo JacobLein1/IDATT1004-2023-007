@@ -50,7 +50,7 @@ async fn main() -> Ev3Result<()> {
                 motor_right.stop()?;
     
                 rotator.set_duty_cycle_sp(175)?;
-                rotator.run_to_rel_pos(Some(x))?;
+                // rotator.run_to_rel_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             },
             Request::Fire => {
@@ -58,7 +58,7 @@ async fn main() -> Ev3Result<()> {
                 motor_left.run_direct()?;
                 motor_right.run_direct()?;
                 feeder.set_duty_cycle_sp(175)?;
-                feeder.run_to_rel_pos(Some(-100))?;
+                // feeder.run_to_rel_pos(Some(-100))?;
             },
             Request::Calibrate => {},
             Request::None => {},
