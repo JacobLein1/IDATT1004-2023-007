@@ -1,20 +1,13 @@
-use std::rc::Rc;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicUsize;
-use std::{io, thread};
-use std::io::prelude::*;
-use std::thread::sleep;
+use std::sync::Arc;
 use std::time::Duration;
 
-use ev3dev_lang_rust::{Ev3Result, wait};
+use ev3dev_lang_rust::Ev3Result;
 use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use serde_json::ser::State::Rest;
 
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::*;
-use tokio::runtime::Handle;
 
 mod constants;
 use constants::*;
@@ -29,11 +22,6 @@ async fn main() -> Ev3Result<()> {
     motor_right.set_stop_action("brake")?;
     rotator.set_stop_action("brake")?;
     feeder.set_stop_action("brake")?;
-
-    motor_left.set_duty_cycle_sp(100)?;
-    motor_left.run_direct()?;
-    sleep(Duration::from_secs(10));
-    motor_left.stop()?;
 
     let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT)).await?;
 
