@@ -19,10 +19,12 @@ async fn main() -> Ev3Result<()> {
     let motor_left = Arc::new(LargeMotor::get(MotorPort::OutB)?);
     let rotator = Arc::new(LargeMotor::get(MotorPort::OutD)?);
     let feeder = Arc::new(MediumMotor::get(MotorPort::OutC)?);
+    /*
     motor_left.set_stop_action("brake")?;
     motor_right.set_stop_action("brake")?;
     rotator.set_stop_action("brake")?;
     feeder.set_stop_action("brake")?;
+    */
 
     let listener = TcpListener::bind(format!("{}:{}", IP_ADDRESS, PORT)).await?;
 
@@ -33,7 +35,7 @@ async fn main() -> Ev3Result<()> {
 
         stream.write(res.as_bytes()).await.unwrap();
         stream.flush().await.unwrap();
-
+        
         match req {
             Request::Adjust(adj) => {
                 let Adjustment { x, force } = adj;
