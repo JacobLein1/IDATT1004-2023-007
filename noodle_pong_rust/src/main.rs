@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 
 use ev3dev_lang_rust::Ev3Result;
@@ -40,7 +41,10 @@ async fn main() -> Ev3Result<()> {
             let force = force_map(force);
             motor_left.set_duty_cycle_sp(force)?;
             motor_right.set_duty_cycle_sp(force)?;
-
+            motor_left.run_direct()?;
+            motor_right.run_direct()?;
+            thread::sleep(Duration::from_secs(1));
+            
             rotator.set_position_sp(x)?;
             // rotator.wait_until_not_moving(Some(TIMEOUT));
         }
