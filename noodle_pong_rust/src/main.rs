@@ -28,7 +28,6 @@ async fn main() -> Ev3Result<()> {
 
     loop {
         let (mut stream, _) = listener.accept().await.unwrap();
-        ev3dev_lang_rust::sound::beep().unwrap();
         
         let (req, res) = parse_request(&mut stream).await;
 
@@ -48,10 +47,13 @@ async fn main() -> Ev3Result<()> {
                 motor_left.stop()?;
                 motor_right.stop()?;
     
-                rotator.set_position_sp(x)?;
+                rotator.set_duty_cycle_sp(175)?;
+                rotator.run_to_abs_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             },
-            Request::Fire => {},
+            Request::Fire => {
+                ev3dev_lang_rust::sound::beep().unwrap();
+            },
             Request::Calibrate => {},
             Request::None => {},
         }
