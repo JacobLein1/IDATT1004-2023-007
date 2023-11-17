@@ -2,13 +2,14 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+use ev3dev_lang_rust::motors::{LargeMotor, MediumMotor, MotorPort};
 use ev3dev_lang_rust::Ev3Result;
 use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor, TachoMotor};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-use tokio::net::{TcpListener, TcpStream};
 use tokio::io::*;
+use tokio::net::{TcpListener, TcpStream};
 
 mod constants;
 use constants::*;
@@ -30,12 +31,12 @@ async fn main() -> Ev3Result<()> {
 
     loop {
         let (mut stream, _) = listener.accept().await.unwrap();
-        
+
         let (req, res) = parse_request(&mut stream).await;
 
         stream.write(res.as_bytes()).await.unwrap();
         stream.flush().await.unwrap();
-        
+
         match req {
             Request::Adjust(adj) => {
                 println!("adjust");
@@ -53,7 +54,7 @@ async fn main() -> Ev3Result<()> {
                 rotator.set_duty_cycle_sp(75)?;
                 // rotator.run_to_rel_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
-            },
+            }
             Request::Fire => {
                 println!("fire");
                 ev3dev_lang_rust::sound::beep().unwrap();
@@ -61,11 +62,10 @@ async fn main() -> Ev3Result<()> {
                 motor_right.run_direct()?;
                 feeder.set_duty_cycle_sp(75)?;
                 // feeder.run_to_rel_pos(Some(-100))?;
-            },
-            Request::Calibrate => {},
-            Request::None => {},
+            }
+            Request::Calibrate => {}
+            Request::None => {}
         }
-
     }
 }
 
@@ -75,13 +75,17 @@ async fn parse_request(stream: &mut TcpStream) -> (Request, &'static str) {
 
     let body = buffer
         .split(|e| *e == b'\n')
-        .last().unwrap()
+        .last()
+        .unwrap()
         .into_iter()
-        .filter_map(|b| if *b == 0 {None} else {Some(*b)})
+        .filter_map(|b| if *b == 0 { None } else { Some(*b) })
         .collect::<Vec<_>>();
 
     let (req, res) = if buffer.starts_with(b"POST /adjust") {
-        (Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()), OK)
+        (
+            Request::Adjust(serde_json::from_slice::<Adjustment>(&body[..]).unwrap()),
+            OK,
+        )
     } else if buffer.starts_with(b"POST /fire") {
         (Request::Fire, OK)
     } else if buffer.starts_with(b"POST /calibrate") {
@@ -98,18 +102,17 @@ const BAD_REQUEST: &str = "HTTP/1.1 400 BAD REQUEST\r\n\r\n";
 
 const TIMEOUT: Duration = Duration::from_secs(3);
 
-
 #[derive(Serialize, Deserialize)]
 struct Adjustment {
     x: f64,
-    force: f64
+    force: f64,
 }
 
 enum Request {
     Adjust(Adjustment),
     Fire,
     Calibrate,
-    None
+    None,
 }
 
 fn dir_map(x: f64) -> i32 {
