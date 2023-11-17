@@ -34,19 +34,26 @@ async fn main() -> Ev3Result<()> {
 
         stream.write(res.as_bytes()).await.unwrap();
         stream.flush().await.unwrap();
-        
-        if let Request::Adjust(adjustment) = req {
-            let Adjustment { x, force } = adjustment;
-            let x = dir_map(x);
-            let force = force_map(force);
-            motor_left.set_duty_cycle_sp(force)?;
-            motor_right.set_duty_cycle_sp(force)?;
-            motor_left.run_direct()?;
-            motor_right.run_direct()?;
-            thread::sleep(Duration::from_secs(1));
-            
-            rotator.set_position_sp(x)?;
-            // rotator.wait_until_not_moving(Some(TIMEOUT));
+
+        match req {
+            Request::Adjust(adj) => {
+                let Adjustment { x, force } = adj;
+                let x = dir_map(x);
+                let force = force_map(force);
+                motor_left.set_duty_cycle_sp(force)?;
+                motor_right.set_duty_cycle_sp(force)?;
+                motor_left.run_direct()?;
+                motor_right.run_direct()?;
+                thread::sleep(Duration::from_secs(1));
+                motor_left.stop()?;
+                motor_right.stop()?;
+    
+                rotator.set_position_sp(x)?;
+                // rotator.wait_until_not_moving(Some(TIMEOUT));
+            },
+            Request::Fire => {},
+            Request::Calibrate => {},
+            Request::None => {},
         }
 
     }
