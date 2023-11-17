@@ -46,11 +46,11 @@ async fn main() -> Ev3Result<()> {
                 motor_right.set_duty_cycle_sp(force)?;
                 motor_left.run_direct()?;
                 motor_right.run_direct()?;
-                // thread::sleep(Duration::from_secs(1));
+                thread::sleep(Duration::from_secs(1));
                 motor_left.stop()?;
                 motor_right.stop()?;
     
-                rotator.set_duty_cycle_sp(175)?;
+                // rotator.set_duty_cycle_sp(175)?;
                 // rotator.run_to_rel_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             },
