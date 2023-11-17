@@ -53,6 +53,10 @@ async fn main() -> Ev3Result<()> {
             },
             Request::Fire => {
                 ev3dev_lang_rust::sound::beep().unwrap();
+                motor_left.run_direct()?;
+                motor_right.run_direct()?;
+                feeder.set_duty_cycle_sp(175)?;
+                feeder.run_to_rel_pos(Some(-100))?;
             },
             Request::Calibrate => {},
             Request::None => {},
