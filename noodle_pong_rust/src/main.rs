@@ -2,9 +2,8 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use ev3dev_lang_rust::motors::{LargeMotor, MediumMotor, MotorPort};
+use ev3dev_lang_rust::motors::{LargeMotor, MediumMotor, MotorPort, TachoMotor};
 use ev3dev_lang_rust::Ev3Result;
-use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor, TachoMotor};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -50,7 +49,7 @@ async fn main() -> Ev3Result<()> {
                 thread::sleep(Duration::from_secs(1));
                 motor_left.stop()?;
                 motor_right.stop()?;
-    
+
                 rotator.set_duty_cycle_sp(75)?;
                 // rotator.run_to_rel_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
