@@ -38,6 +38,7 @@ async fn main() -> Ev3Result<()> {
         
         match req {
             Request::Adjust(adj) => {
+                println!("adjust");
                 let Adjustment { x, force } = adj;
                 let x = dir_map(x);
                 let force = force_map(force);
@@ -54,6 +55,7 @@ async fn main() -> Ev3Result<()> {
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             },
             Request::Fire => {
+                println!("fire");
                 ev3dev_lang_rust::sound::beep().unwrap();
                 motor_left.run_direct()?;
                 motor_right.run_direct()?;
