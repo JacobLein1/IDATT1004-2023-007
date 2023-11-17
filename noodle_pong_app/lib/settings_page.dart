@@ -56,17 +56,16 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  _handleSetDefault(BuildContext context) {
+  void _handleSetDefault(BuildContext context) {
     _handleResetForm(context);
     _ipController.text = DEFAULT_IP_ADDRESS;
     _portController.text = DEFAULT_PORT.toString();
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title: const Text("settings"),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
@@ -87,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 validator: _ipValidator,
                 decoration: const InputDecoration(
                   labelText: "IP-address",
-                  border: OutlineInputBorder(),
+                  // border: OutlineInputBorder(),
                 ),
               ),
               SizedBox(
@@ -174,6 +173,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: () async {
                       try {
                         final result = await http.post(getTestUrl(app));
+
+                        print(result);
 
                         if (result.statusCode == 200) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
