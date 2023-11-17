@@ -3,7 +3,7 @@ use std::thread;
 use std::time::Duration;
 
 use ev3dev_lang_rust::Ev3Result;
-use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor};
+use ev3dev_lang_rust::motors::{LargeMotor, MotorPort, MediumMotor, TachoMotor};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -17,7 +17,7 @@ use constants::*;
 async fn main() -> Ev3Result<()> {
     let motor_right = Arc::new(LargeMotor::get(MotorPort::OutA)?);
     let motor_left = Arc::new(LargeMotor::get(MotorPort::OutB)?);
-    let rotator = Arc::new(LargeMotor::get(MotorPort::OutD)?);
+    let rotator = Arc::new(TachoMotor::get(MotorPort::OutD)?);
     let feeder = Arc::new(MediumMotor::get(MotorPort::OutC)?);
     /*
     motor_left.set_stop_action("brake")?;
@@ -50,7 +50,7 @@ async fn main() -> Ev3Result<()> {
                 motor_left.stop()?;
                 motor_right.stop()?;
     
-                // rotator.set_duty_cycle_sp(175)?;
+                rotator.set_duty_cycle_sp(75)?;
                 // rotator.run_to_rel_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             },
@@ -59,7 +59,7 @@ async fn main() -> Ev3Result<()> {
                 ev3dev_lang_rust::sound::beep().unwrap();
                 motor_left.run_direct()?;
                 motor_right.run_direct()?;
-                feeder.set_duty_cycle_sp(175)?;
+                feeder.set_duty_cycle_sp(75)?;
                 // feeder.run_to_rel_pos(Some(-100))?;
             },
             Request::Calibrate => {},
@@ -117,5 +117,5 @@ fn dir_map(x: f64) -> i32 {
 }
 
 fn force_map(force: f64) -> i32 {
-    (force * 100.00) as i32
+    (force * 99.00) as i32
 }
