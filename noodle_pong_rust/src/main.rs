@@ -40,18 +40,20 @@ async fn main() -> Ev3Result<()> {
             Request::Adjust(adj) => {
                 println!("adjust");
                 let Adjustment { x, force } = adj;
-                let x = dir_map(x);
-                let force = force_map(force);
+                println!("Force: {force}, rotation: {x}");
+                // let x = dir_map(x);
+                let force = -force_map(force);
                 motor_left.set_duty_cycle_sp(force)?;
                 motor_right.set_duty_cycle_sp(force)?;
-                motor_left.run_direct()?;
-                motor_right.run_direct()?;
-                thread::sleep(Duration::from_secs(1));
-                motor_left.stop()?;
-                motor_right.stop()?;
-
-                rotator.set_duty_cycle_sp(75)?;
-                // rotator.run_to_rel_pos(Some(x))?;
+                // motor_left.run_direct()?;
+                // motor_right.run_direct()?;
+                // motor_left.stop()?;
+                // motor_right.stop()?;
+                rotator.set_speed_sp(200)?;
+                let tacos = (rotator.get_count_per_rot()? as f64 * (1.0 / 8.0) * (x)) as i32;
+                println!("tacos: {}", tacos);
+                rotator.run_to_rel_pos(Some(tacos))?;
+                // rotator.run_to_abs_pos(Some(x))?;
                 // rotator.wait_until_not_moving(Some(TIMEOUT));
             }
             Request::Fire => {
@@ -59,10 +61,17 @@ async fn main() -> Ev3Result<()> {
                 ev3dev_lang_rust::sound::beep().unwrap();
                 motor_left.run_direct()?;
                 motor_right.run_direct()?;
-                feeder.set_duty_cycle_sp(75)?;
-                // feeder.run_to_rel_pos(Some(-100))?;
+                feeder.set_speed_sp(275)?;
+                feeder.run_to_rel_pos(Some(1500))?;
+                feeder.wait_until_not_moving(None);
+                motor_left.stop()?;
+                motor_right.stop()?;
+                feeder.run_to_rel_pos(Some(-1500))?;
             }
-            Request::Calibrate => {}
+            Request::Calibrate => {
+                feeder.set_speed_sp(100)?;
+                feeder.run_to_abs_pos(Some(0))?;
+            }
             Request::None => {}
         }
     }
